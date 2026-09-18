@@ -63,20 +63,24 @@ resource "aws_security_group" "my_security_group" {
 
 resource "aws_instance" "my_instance" {
 
-  count = 2
+  # count = 2
+  for_each = tomap({
+    this_this_t3micro = "t3.micro",
+    this_is_for_t4medium = "te.medium"
+  })
   key_name        = aws_key_pair.my_key.key_name
   security_groups = [aws_security_group.my_security_group.name]
-  instance_type   = var.ec2_intance_type
+  instance_type   = each.value
   ami             = var.ec2_ami_id
   user_data       = file("install_nginx.sh")
 
   root_block_device {
-    volume_size = var.ec2_root_storage_size
+    volume_size = var.env == "prd" ? 20 : var.ec2_root_default_storage_size
     volume_type = "gp3"
 
   }
   tags = {
-    Name = "First-TerraForm-Instance"
+    Name = each.key
   }
 
 }
