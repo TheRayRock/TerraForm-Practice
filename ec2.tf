@@ -66,7 +66,7 @@ resource "aws_instance" "my_instance" {
   # count = 2
   for_each = tomap({
     this_this_t3micro = "t3.micro",
-    this_is_for_t4medium = "te.medium"
+    this_is_for_t3small = "t3.small"
   })
   key_name        = aws_key_pair.my_key.key_name
   security_groups = [aws_security_group.my_security_group.name]
@@ -83,5 +83,12 @@ resource "aws_instance" "my_instance" {
     Name = each.key
   }
 
+}
+
+
+resource "aws_instance" "new_instance" {
+  instance_type = "unknow"
+  ami = "unknow"
+  
 }
 
