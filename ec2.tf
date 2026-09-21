@@ -1,8 +1,11 @@
 # key pair
 
 resource "aws_key_pair" "my_key" {
-  key_name   = "terraform-key-ec2"
+  key_name   = "{$var.env}-terraform-key-ec2"
   public_key = file("terraform-key-ec2.pub")
+  tags = {
+    Enviroment = var.env
+  }
 }
 
 # vpc & security group
@@ -12,7 +15,7 @@ resource "aws_default_vpc" "default" {
 }
 
 resource "aws_security_group" "my_security_group" {
-  name        = "automate-sg"
+  name        = "{$var.env}-automate-sg"
   description = "this add for tf generated security group"
   vpc_id      = aws_default_vpc.default.id #interpolation syntax to get the vpc id from the default vpc resource
 
@@ -54,7 +57,8 @@ resource "aws_security_group" "my_security_group" {
   }
 
   tags = {
-    Name = "automate-sg"
+    Name = "{$var.env}-automate-sg"
+    Enviroment = var.env
   }
 }
 
