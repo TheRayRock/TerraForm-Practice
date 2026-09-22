@@ -1,21 +1,11 @@
-# Terraform Practice 🚀
+# Terraform AWS Practice 🚀
 
-This project is a basic **Terraform practice project** for learning how to create and manage AWS infrastructure using Terraform.
+A hands-on **Terraform + AWS** project created to learn how to provision and manage AWS infrastructure using Infrastructure as Code (IaC).
 
-## 📁 Project Structure
+This project currently demonstrates:
 
-```text
-TerraForm-Practice/
-│
-├── ec2.tf                # EC2 instance configuration
-├── provider.tf           # AWS provider configuration# Terraform AWS EC2 Practice 🚀
-
-This project is a hands-on **Terraform + AWS practice project**.
-
-The project demonstrates how to use Terraform to create and manage AWS infrastructure, including:
-
-* AWS EC2 instances
-* AWS Default VPC
+* AWS EC2
+* AWS VPC
 * Security Groups
 * AWS Key Pair
 * Terraform Variables
@@ -25,44 +15,40 @@ The project demonstrates how to use Terraform to create and manage AWS infrastru
 * EC2 `user_data`
 * Nginx installation
 * Environment-based configuration
-
-The goal of this project is to understand the **basic-to-intermediate Terraform workflow** and how Terraform can be used to automate AWS infrastructure.
+* Terraform state and basic CLI commands
 
 ---
 
 ## 🏗️ Architecture
 
 ```text
-                    AWS
-                     │
-                     ▼
-              Default VPC
-                     │
-              ┌──────┴──────┐
-              │             │
-              ▼             ▼
-       Security Group   Key Pair
-              │
-       ┌──────┴──────┐
-       │             │
-       ▼             ▼
-   EC2 Instance   EC2 Instance
-    t3.micro        t3.small
-       │             │
-       └──────┬──────┘
-              │
-              ▼
-          Nginx Server
+                         AWS
+                          │
+                          ▼
+                    Default VPC
+                          │
+                          ▼
+                  Security Group
+                          │
+              ┌───────────┴───────────┐
+              │                       │
+              ▼                       ▼
+        EC2 - t3.micro          EC2 - t3.small
+              │                       │
+              └───────────┬───────────┘
+                          │
+                          ▼
+                    Nginx Server
 ```
 
-Terraform creates **two EC2 instances** using `for_each`:
+The project creates **two EC2 instances** using Terraform `for_each`:
 
 ```text
 t3.micro
 t3.small
 ```
 
-The EC2 instances use the `install_nginx.sh` script through `user_data`.
+The EC2 instances use the `install_nginx.sh` script through `user_data` to install Nginx automatically.
 
 ---
 
@@ -71,101 +57,15 @@ The EC2 instances use the `install_nginx.sh` script through `user_data`.
 ```text
 TerraForm-Practice/
 │
-├── ec2.tf                # EC2, VPC, Security Group and Key Pair
+├── ec2.tf                # EC2, security group and key pair
+├── vpc.tf                # VPC configuration
 ├── provider.tf           # AWS provider configuration
-├── terraform.tf          # Terraform and provider requirements
+├── terraform.tf          # Terraform/provider requirements
 ├── variable.tf           # Input variables
 ├── outputs.tf            # Terraform outputs
-├── install_nginx.sh      # EC2 startup script for Nginx
-├── .gitignore
-└── README.md
-```
-
----
-
-# 🔧 What This Project Creates
-
-## 1. AWS Key Pair
-
-Terraform creates an AWS key pair using a local public key:
-
-```hcl
-resource "aws_key_pair" "my_key"
-```
-
-The project expects:
-
-```text
-terraform-key-ec2.pub
-```
-
-The private key should **never** be uploaded to GitHub.
-
----
-
-## 2. Default VPC
-
-The project uses the AWS default VPC:
-
-```hcl
-resource "aws_default_vpc" "default"
-```
-
----
-
-## 3. Security Group
-
-A security group is created for the EC2 instances.
-
-The current configuration allows:
-
-| Port | Protocol | Purpose            |
-| ---: | -------- | ------------------ |
-|   22 | TCP      | SSH                |
-|   80 | TCP      | HTTP               |
-| 8000 | TCP      | Application access |
-|  All | All      | Outbound traffic   |
-
-> ⚠️ For production, avoid opening SSH (`22`) to `0.0.0.0/0`. Restrict it to your IP address or use a safer access method.
-
----
-
-## 4. EC2 Instances
-
-The project uses Terraform `for_each` to create two EC2 instances:
-
-```hcl
-for_each = tomap({
-  this_this_t3micro = "t3.micro"
-  this_is_for_t3small = "t3.small"
-})
-```
-
-This creates:
-
-```text
-EC2 #1 → t3.micro
-EC2 #2 → t3.small
-```
-
-This is useful for learning how Terraform can create multiple resources from a collection.
-
----
-
-## 5. Nginx Installation
-
-The EC2 instances use:
-
-```hcl
-user_data = file("install_nginx.sh")
-```
-
-The script installs Nginx automatically when the instance starts.
-
-The script also creates a simple HTML page:
-
-```text
-Terraform In One short by Shahnawaz
+├── install_nginx.sh      # Nginx installation script
+├── .gitignore            # Ignored files
+└── README.md             # Project documentation
 ```
 
 ---
@@ -178,7 +78,7 @@ Before running this project, install:
 * AWS CLI
 * AWS account
 * AWS credentials
-* SSH key pair/public key
+* SSH public key
 
 ### Check Terraform
 
@@ -202,7 +102,7 @@ aws sts get-caller-identity
 
 # 🔐 Configure AWS Credentials
 
-Configure your AWS credentials:
+Configure your AWS credentials using:
 
 ```bash
 aws configure
@@ -226,43 +126,39 @@ Default region name:  ap-south-1
 Default output format: json
 ```
 
-Verify the credentials:
+Verify:
 
 ```bash
 aws sts get-caller-identity
 ```
 
-⚠️ **Never commit AWS access keys or secret keys to GitHub.**
+⚠️ **Never upload AWS access keys or secret keys to GitHub.**
 
 ---
 
-# 🔑 SSH Public Key
+# 🔑 SSH Key
 
-Make sure this file exists in the Terraform project directory:
+The project expects a public SSH key:
 
 ```text
 terraform-key-ec2.pub
 ```
 
-The Terraform configuration reads this file:
+The Terraform configuration uses this public key to create an AWS key pair.
 
-```hcl
-public_key = file("terraform-key-ec2.pub")
-```
+Make sure the file exists in the project directory before running Terraform.
 
-Never upload your private SSH key to GitHub.
-
-For example, do **not** commit:
+Never upload your private key:
 
 ```text
 terraform-key-ec2
 ```
 
-Only the public key should be used by Terraform.
+to GitHub.
 
 ---
 
-# 🚀 How to Run the Project
+# 🚀 How to Run
 
 ## 1. Clone the Repository
 
@@ -270,7 +166,7 @@ Only the public key should be used by Terraform.
 git clone https://github.com/TheRayRock/TerraForm-Practice.git
 ```
 
-Go inside the project:
+Go into the project:
 
 ```bash
 cd TerraForm-Practice
@@ -284,7 +180,7 @@ cd TerraForm-Practice
 terraform init
 ```
 
-This downloads the required Terraform provider and prepares the working directory.
+This downloads the required providers and initializes the Terraform working directory.
 
 ---
 
@@ -294,7 +190,7 @@ This downloads the required Terraform provider and prepares the working director
 terraform fmt
 ```
 
-To check formatting without changing files:
+Check formatting without changing files:
 
 ```bash
 terraform fmt -check
@@ -310,12 +206,6 @@ terraform validate
 
 This checks whether the Terraform configuration is valid.
 
-Expected result:
-
-```text
-Success! The configuration is valid.
-```
-
 ---
 
 ## 5. Create a Terraform Plan
@@ -324,27 +214,25 @@ Success! The configuration is valid.
 terraform plan
 ```
 
-This shows what Terraform is going to create or change.
+This shows what Terraform plans to create, update, or delete.
 
-It does **not** create the infrastructure.
+It does **not** create resources.
 
 ---
 
-## 6. Apply the Configuration
+## 6. Create AWS Infrastructure
 
 ```bash
 terraform apply
 ```
 
-Terraform will show the planned changes.
+Terraform will show the changes and ask for confirmation.
 
 Type:
 
 ```text
 yes
 ```
-
-Terraform will then create the AWS infrastructure.
 
 You can also use:
 
@@ -356,84 +244,108 @@ terraform apply -auto-approve
 
 ---
 
-# 📤 View Outputs
+# 🌎 Environment Variable
 
-After `terraform apply`, check the outputs:
+This project uses an `env` variable.
 
-```bash
-terraform output
-```
-
-You can also check a specific output:
-
-```bash
-terraform output <output_name>
-```
-
-Outputs can be useful for getting information such as:
+The default value is:
 
 ```text
-EC2 instance ID
-Public IP
-Public DNS
+dev
 ```
 
-depending on what is defined in `outputs.tf`.
+The variable is defined in `variable.tf`.
+
+You can provide another environment during `terraform apply`.
+
+For example:
+
+```bash
+terraform apply -var="env=dev"
+```
+
+or:
+
+```bash
+terraform apply -var="env=prd"
+```
+
+The project also uses the environment value when calculating EC2 root storage:
+
+```text
+dev
+ ↓
+Default storage size
+
+prd
+ ↓
+20 GB
+```
+
+This is implemented using a Terraform conditional expression.
 
 ---
 
-# 🌍 Access Nginx
+# 🔁 Creating Multiple EC2 Instances
 
-After the EC2 instances are created, get their public IP addresses from:
+The project uses Terraform `for_each`:
 
-```bash
-terraform output
+```hcl
+for_each = tomap({
+  this_this_t3micro = "t3.micro"
+  this_is_for_t3small = "t3.small"
+})
 ```
 
-Then open the IP address in your browser:
+Terraform creates:
+
+```text
+EC2 Instance 1 → t3.micro
+EC2 Instance 2 → t3.small
+```
+
+This is an example of using `for_each` to create multiple resources from a map.
+
+---
+
+# 🌐 Nginx Installation
+
+The EC2 instances use:
+
+```hcl
+user_data = file("install_nginx.sh")
+```
+
+This runs the shell script when the EC2 instance starts.
+
+The script is responsible for installing and configuring Nginx.
+
+After the instance is running, you can access the web server using:
 
 ```text
 http://<EC2_PUBLIC_IP>
 ```
 
-You should see the Nginx page created by the startup script.
-
 ---
 
-# 🔄 Terraform Workflow
+# 📤 Terraform Outputs
 
-The normal Terraform workflow is:
+After applying the configuration:
 
 ```bash
-terraform init
-terraform fmt
-terraform validate
-terraform plan
-terraform apply
+terraform output
 ```
 
-In simple words:
+To get a specific output:
+
+```bash
+terraform output <output_name>
+```
+
+Outputs are defined in:
 
 ```text
-terraform init
-       ↓
-Prepare Terraform
-
-terraform fmt
-       ↓
-Format code
-
-terraform validate
-       ↓
-Check configuration
-
-terraform plan
-       ↓
-Preview changes
-
-terraform apply
-       ↓
-Create / Update AWS infrastructure
+outputs.tf
 ```
 
 ---
@@ -452,15 +364,61 @@ Type:
 yes
 ```
 
-This removes the infrastructure managed by Terraform.
-
 You can preview the destruction first:
 
 ```bash
 terraform plan -destroy
 ```
 
-⚠️ **Always destroy unused AWS resources to avoid unexpected AWS charges.**
+⚠️ Destroy unused resources to avoid unnecessary AWS charges.
+
+---
+
+# 🔄 Terraform Workflow
+
+The normal workflow is:
+
+```bash
+terraform init
+terraform fmt
+terraform validate
+terraform plan
+terraform apply
+```
+
+When finished:
+
+```bash
+terraform destroy
+```
+
+### Simple Explanation
+
+```text
+terraform init
+       ↓
+Initialize Terraform
+
+terraform fmt
+       ↓
+Format code
+
+terraform validate
+       ↓
+Check configuration
+
+terraform plan
+       ↓
+Preview changes
+
+terraform apply
+       ↓
+Create / Update infrastructure
+
+terraform destroy
+       ↓
+Delete infrastructure
+```
 
 ---
 
@@ -475,128 +433,71 @@ terraform plan -destroy
 | `terraform plan`                  | Preview changes              |
 | `terraform apply`                 | Create/update infrastructure |
 | `terraform output`                | Show outputs                 |
-| `terraform show`                  | Show Terraform state/plan    |
+| `terraform show`                  | Show Terraform state         |
 | `terraform state list`            | List managed resources       |
 | `terraform state show <resource>` | Show resource details        |
+| `terraform console`               | Test Terraform expressions   |
 | `terraform destroy`               | Delete infrastructure        |
 | `terraform plan -destroy`         | Preview destruction          |
-| `terraform console`               | Test Terraform expressions   |
 | `terraform version`               | Show Terraform version       |
 
 ---
 
 # 🧠 Terraform Concepts Practiced
 
-This project covers several important Terraform concepts:
+This project helps practice:
 
-### Variables
+### Terraform Basics
 
-Input values are defined in:
+* Terraform providers
+* Resources
+* Variables
+* Outputs
+* Terraform state
+* Terraform CLI
 
-```text
-variable.tf
-```
+### AWS
 
-Examples include:
+* EC2
+* VPC
+* Security Groups
+* Key Pairs
+* Nginx
 
-```text
-Environment
-EC2 AMI ID
-EC2 instance storage
-```
+### Terraform Features
 
----
-
-### `for_each`
-
-Used to create multiple EC2 instances:
-
-```hcl
-for_each = tomap({
-  this_this_t3micro = "t3.micro"
-  this_is_for_t3small = "t3.small"
-})
-```
+* `for_each`
+* `tomap()`
+* Conditional expressions
+* Resource dependencies
+* `user_data`
+* Variable-based configuration
 
 ---
 
-### Conditional Expression
-
-The project uses a conditional expression for the EC2 root volume:
-
-```hcl
-var.env == "prd" ? 20 : var.ec2_root_default_storage_size
-```
-
-In simple words:
-
-```text
-If environment = prd
-        ↓
-Use 20 GB
-
-Otherwise
-        ↓
-Use the default storage size
-```
-
----
-
-### Resource Dependencies
-
-Terraform automatically understands relationships between resources.
-
-For example:
-
-```text
-EC2
- ↓
-Security Group
- ↓
-Default VPC
-```
-
-Terraform creates resources in the required order.
-
----
-
-### User Data
-
-The EC2 instance uses:
-
-```hcl
-user_data = file("install_nginx.sh")
-```
-
-This automatically runs the Nginx installation script when the instance starts.
-
----
-
-# ⚠️ Security Notes
+# 🔒 Security Notes
 
 This project is for **learning and practice**.
 
-The security group currently allows SSH from:
+The current security group allows:
+
+```text
+Port 22   → SSH
+Port 80   → HTTP
+Port 8000 → Application
+```
+
+The configuration currently allows these inbound ports from:
 
 ```text
 0.0.0.0/0
 ```
 
-That means SSH is open to the internet.
+That means they are accessible from the internet.
 
-For a real production environment, restrict SSH access:
+For a production environment, restrict access to trusted IP addresses and only open ports that are required.
 
-```text
-Your IP → Port 22
-```
-
-instead of:
-
-```text
-Internet → Port 22
-```
-
-Also never commit:
+Never commit:
 
 ```text
 AWS Access Keys
@@ -606,365 +507,13 @@ terraform.tfstate
 terraform.tfstate.backup
 ```
 
-Make sure sensitive files are included in `.gitignore`.
-
----
-
-# 📚 Terraform Learning Path
-
-This project is a good starting point for learning:
-
-```text
-Terraform Basics
-      ↓
-Variables
-      ↓
-Outputs
-      ↓
-Resources
-      ↓
-Dependencies
-      ↓
-for_each
-      ↓
-Conditional Expressions
-      ↓
-User Data
-      ↓
-AWS EC2
-      ↓
-Security Groups
-      ↓
-Terraform State
-      ↓
-Modules
-      ↓
-Remote State
-      ↓
-Terraform CI/CD
-```
-
----
-
-# 📖 References
-
-* [Terraform Documentation](https://developer.hashicorp.com/terraform/docs)
-* [Terraform CLI Documentation](https://developer.hashicorp.com/terraform/cli)
-* [AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-* [Terraform AWS EC2](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/instance)
-
----
-
-# 👨‍💻 Author
-
-**TheRayRock**
-
-GitHub: https://github.com/TheRayRock
-
-├── terraform.tf          # Terraform configuration
-├── variable.tf           # Input variables
-├── outputs.tf            # Output values
-├── install_nginx.sh      # Script to install Nginx
-├── .gitignore
-└── README.md
-```
-
-## 🛠️ Prerequisites
-
-Before running this project, make sure you have:
-
-* [Terraform](https://developer.hashicorp.com/terraform/install) installed
-* AWS account
-* AWS CLI installed
-* AWS credentials configured
-* An AWS key pair/public key required by the Terraform configuration
-
-Check Terraform:
-
-```bash
-terraform --version
-```
-
-Check AWS CLI:
-
-```bash
-aws --version
-```
-
-Check AWS credentials:
-
-```bash
-aws sts get-caller-identity
-```
-
----
-
-# 🚀 How to Run Terraform
-
-## 1. Clone the Repository
-
-```bash
-git clone https://github.com/TheRayRock/TerraForm-Practice.git
-```
-
-Go inside the project:
-
-```bash
-cd TerraForm-Practice
-```
-
----
-
-## 2. Initialize Terraform
-
-Run:
-
-```bash
-terraform init
-```
-
-`terraform init` prepares the Terraform working directory and downloads the required providers and modules.
-
----
-
-## 3. Format Terraform Files
-
-Run:
-
-```bash
-terraform fmt
-```
-
-This formats Terraform files into Terraform's standard style.
-
-You can also check which files would be changed:
-
-```bash
-terraform fmt -check
-```
-
----
-
-## 4. Validate the Configuration
-
-Run:
-
-```bash
-terraform validate
-```
-
-This checks whether the Terraform configuration is syntactically correct and internally valid.
-
----
-
-## 5. Create a Terraform Plan
-
-Run:
-
-```bash
-terraform plan
-```
-
-This shows what Terraform plans to create, modify, or delete **without actually making those changes**.
-
----
-
-## 6. Create the AWS Infrastructure
-
-Run:
-
-```bash
-terraform apply
-```
-
-Terraform will show the planned changes and ask for confirmation.
-
-Type:
-
-```text
-yes
-```
-
-Terraform will then create the resources defined in your configuration.
-
-You can also use:
-
-```bash
-terraform apply -auto-approve
-```
-
-⚠️ Use `-auto-approve` carefully because Terraform will not ask for confirmation.
-
----
-
-## 7. View Terraform Outputs
-
-After applying the configuration:
-
-```bash
-terraform output
-```
-
-To see a specific output:
-
-```bash
-terraform output <output_name>
-```
-
----
-
-# 🗑️ Destroy Infrastructure
-
-When you finish practicing, destroy the resources to avoid unnecessary AWS charges:
-
-```bash
-terraform destroy
-```
-
-Terraform will ask for confirmation.
-
-Type:
-
-```text
-yes
-```
-
-`terraform destroy` removes the infrastructure managed by the Terraform configuration.
-
-You can also preview what will be destroyed:
-
-```bash
-terraform plan -destroy
-```
-
----
-
-# 🔄 Basic Terraform Workflow
-
-The most common Terraform workflow is:
-
-```bash
-terraform init
-terraform fmt
-terraform validate
-terraform plan
-terraform apply
-```
-
-When you are finished:
-
-```bash
-terraform destroy
-```
-
-In simple words:
-
-```text
-init
- ↓
-Prepare Terraform
-
-fmt
- ↓
-Format code
-
-validate
- ↓
-Check code
-
-plan
- ↓
-See what will happen
-
-apply
- ↓
-Create / Update infrastructure
-
-destroy
- ↓
-Delete infrastructure
-```
-
-Terraform's core workflow is **Init → Plan → Apply**, with `destroy` used when you want to remove the managed infrastructure.
-
----
-
-# 🔐 AWS Credentials
-
-Terraform needs permission to access AWS.
-
-You can configure AWS credentials using the AWS CLI:
-
-```bash
-aws configure
-```
-
-It will ask for:
-
-```text
-AWS Access Key ID
-AWS Secret Access Key
-Default region name
-Default output format
-```
-
-For example:
-
-```text
-AWS Access Key ID:     YOUR_ACCESS_KEY
-AWS Secret Access Key: YOUR_SECRET_KEY
-Default region name:  ap-south-1
-Default output format: json
-```
-
-⚠️ **Never commit AWS access keys, secret keys, private keys, or other secrets to GitHub.**
-
----
-
-# 🔑 SSH Key
-
-If your EC2 configuration uses an SSH key pair, make sure the required public key file exists before running Terraform.
-
-Example:
-
-```text
-terraform-key-ec2.pub
-```
-
-Never upload your private key:
-
-```text
-terraform-key-ec2
-```
-
 to GitHub.
-
-Add private keys and other secrets to `.gitignore`.
-
----
-
-# 📌 Useful Terraform Commands
-
-| Command                   | Purpose                                  |
-| ------------------------- | ---------------------------------------- |
-| `terraform init`          | Initialize Terraform                     |
-| `terraform fmt`           | Format Terraform files                   |
-| `terraform validate`      | Validate configuration                   |
-| `terraform plan`          | Preview changes                          |
-| `terraform apply`         | Create/update infrastructure             |
-| `terraform output`        | Show outputs                             |
-| `terraform show`          | Show current state/plan information      |
-| `terraform state list`    | List resources in Terraform state        |
-| `terraform destroy`       | Delete infrastructure                    |
-| `terraform plan -destroy` | Preview resources that will be destroyed |
-| `terraform version`       | Show Terraform version                   |
-| `terraform`               | Show available commands                  |
 
 ---
 
 # ⚠️ Important
 
-Terraform manages real AWS infrastructure.
+Terraform creates **real AWS resources**.
 
 Before running:
 
@@ -972,27 +521,31 @@ Before running:
 terraform apply
 ```
 
-always review:
+always check:
 
 ```bash
 terraform plan
 ```
 
-After your practice, run:
+When you finish practicing:
 
 ```bash
 terraform destroy
 ```
 
-to remove resources you no longer need.
+This helps prevent unexpected AWS charges.
 
-## 📚 References
+---
 
-* [Terraform CLI Documentation](https://developer.hashicorp.com/terraform/cli?utm_source=chatgpt.com)
-* [Terraform Workflow Documentation](https://developer.hashicorp.com/terraform/cli/run?utm_source=chatgpt.com)
-* [AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs?utm_source=chatgpt.com)
+# 📚 References
 
-## 👨‍💻 Author
+* [Terraform Documentation](https://developer.hashicorp.com/terraform/docs)
+* [Terraform CLI Documentation](https://developer.hashicorp.com/terraform/cli)
+* [AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+
+---
+
+# 👨‍💻 Author
 
 **TheRayRock**
 
